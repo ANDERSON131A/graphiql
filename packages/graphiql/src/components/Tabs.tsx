@@ -1,4 +1,5 @@
-import React from 'react';
+import { CloseIcon, PlusIcon, UnStyledButton } from '@graphiql/react';
+import React, { ReactNode } from 'react';
 
 /**
  * TODO: extract with other components to @graphiql/react
@@ -9,14 +10,15 @@ function TabCloseButton(props: { onClick: () => void }) {
     <div
       role="button"
       aria-pressed={false}
-      className="close"
+      className="graphiql-tab-close"
       aria-label="Close Tab"
       title="Close Tab"
       onClick={ev => {
         ev.stopPropagation();
         props.onClick();
-      }}
-    />
+      }}>
+      <CloseIcon />
+    </div>
   );
 }
 
@@ -34,32 +36,32 @@ export type TabProps = {
  */
 export function Tab(props: TabProps): React.ReactElement {
   return (
-    <button
+    <UnStyledButton
       {...props.tabProps}
       role="tab"
       type="button"
       aria-selected={props.isActive}
       title={props.title}
-      className={`tab${props.isActive ? ' active' : ''}`}
+      className={`graphiql-tab${props.isActive ? ' graphiql-tab-active' : ''}`}
       onClick={props.onSelect}>
       {props.title}
       {props.isCloseable ? (
         <TabCloseButton onClick={() => props.onClose()} />
       ) : null}
-    </button>
+    </UnStyledButton>
   );
 }
 
 export function TabAddButton(props: { onClick: () => void }) {
   return (
-    <button onClick={props.onClick} className="tab-add" title="Create new tab">
-      <span>+</span>
-    </button>
+    <UnStyledButton className="graphiql-add-tabs" onClick={props.onClick}>
+      <PlusIcon />
+    </UnStyledButton>
   );
 }
 
 export type TabsProps = {
-  children: Array<React.ReactNode>;
+  children: ReactNode;
   tabsProps?: React.HTMLAttributes<{}>;
 };
 /**
@@ -67,7 +69,7 @@ export type TabsProps = {
  */
 export function Tabs(props: TabsProps) {
   return (
-    <div role="tablist" className="tabs" {...props.tabsProps}>
+    <div role="tablist" className="graphiql-tabs" {...props.tabsProps}>
       {props.children}
     </div>
   );
