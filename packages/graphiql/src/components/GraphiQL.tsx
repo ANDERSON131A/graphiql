@@ -21,8 +21,11 @@ import {
 } from 'graphql';
 
 import {
+  Button,
+  ButtonGroup,
   ChevronDownIcon,
   ChevronUpIcon,
+  CloseIcon,
   CopyIcon,
   DocsIcon,
   EditorContextProvider,
@@ -605,8 +608,12 @@ type GraphiQLWithContextConsumerProps = Omit<
   editorToolsResize: ReturnType<typeof useDragResize>;
 };
 
+type Theme = 'light' | 'dark';
+
 export type GraphiQLState = {
   activeSecondaryEditor: 'variable' | 'header';
+  showSettings: boolean;
+  theme: Theme;
 };
 
 class GraphiQLWithContext extends React.Component<
@@ -617,7 +624,43 @@ class GraphiQLWithContext extends React.Component<
     super(props);
 
     // Initialize state
-    this.state = { activeSecondaryEditor: 'variable' };
+    this.state = {
+      activeSecondaryEditor: 'variable',
+      showSettings: false,
+      theme: this.getTheme(),
+    };
+
+    // Set theme on body
+    document.body.classList.add(`graphiql-${this.state.theme}`);
+  }
+
+  getTheme(): Theme {
+    if (!this.props.storageContext) {
+      return 'light';
+    }
+
+    const stored = this.props.storageContext.get(STORAGE_KEY_THEME);
+    switch (stored) {
+      case 'light':
+        return 'light';
+      case 'dark':
+        return 'dark';
+      default:
+        if (typeof stored === 'string') {
+          // Remove the invalid stored value
+          this.props.storageContext.set(STORAGE_KEY_THEME, '');
+        }
+        return 'light';
+    }
+  }
+
+  setTheme(theme: Theme) {
+    this.props.storageContext?.set(STORAGE_KEY_THEME, theme);
+    this.setState({ theme });
+    document.body.classList.remove(
+      `graphiql-${theme === 'light' ? 'dark' : 'light'}`,
+    );
+    document.body.classList.add(`graphiql-${theme}`);
   }
 
   render() {
@@ -668,7 +711,9 @@ class GraphiQLWithContext extends React.Component<
     const headerEditorEnabled = this.props.headerEditorEnabled ?? true;
 
     return (
-      <div data-testid="graphiql-container" className="graphiql-container">
+      <div
+        data-testid="graphiql-container"
+        className={`graphiql-container graphiql-${this.state.theme}`}>
         <div className="graphiql-sidebar">
           <div>
             {this.props.explorerContext ? (
@@ -724,7 +769,10 @@ class GraphiQLWithContext extends React.Component<
             <UnStyledButton>
               <KeyboardShortcutIcon />
             </UnStyledButton>
-            <UnStyledButton>
+            <UnStyledButton
+              onClick={() => {
+                this.setState({ showSettings: true });
+              }}>
               <SettingsIcon />
             </UnStyledButton>
           </div>
@@ -975,6 +1023,69 @@ class GraphiQLWithContext extends React.Component<
             </div>
           </div>
         </div>
+        {this.state.showSettings ? (
+          <div className="graphiql-dialog-backdrop">
+            <div className="graphiql-dialog">
+              <div className="graphiql-dialog-header">
+                <div className="graphiql-dialog-title">Settings</div>
+                <UnStyledButton
+                  className="graphiql-dialog-close"
+                  onClick={() => {
+                    this.setState({ showSettings: false });
+                  }}>
+                  <CloseIcon />
+                </UnStyledButton>
+              </div>
+              <div className="graphiql-dialog-section">
+                <div>
+                  <div className="graphiql-dialog-section-title">Theme</div>
+                  <div className="graphiql-dialog-section-caption">
+                    Adjust how the interface looks like.
+                  </div>
+                </div>
+                <div>
+                  <ButtonGroup>
+                    <Button
+                      className={this.state.theme === 'light' ? 'active' : ''}
+                      onClick={() => {
+                        this.setTheme('light');
+                      }}>
+                      Light
+                    </Button>
+                    <Button
+                      className={this.state.theme === 'dark' ? 'active' : ''}
+                      onClick={() => {
+                        this.setTheme('dark');
+                      }}>
+                      Dark
+                    </Button>
+                  </ButtonGroup>
+                </div>
+              </div>
+              {this.props.storageContext ? (
+                <div className="graphiql-dialog-section">
+                  <div>
+                    <div className="graphiql-dialog-section-title">
+                      Clear storage
+                    </div>
+                    <div className="graphiql-dialog-section-caption">
+                      Remove all locally stored data and start fresh.
+                    </div>
+                  </div>
+                  <div>
+                    <Button
+                      onClick={() => {
+                        this.props.storageContext?.clear();
+                        // TODO: show some success message
+                      }}>
+                      Clear data
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -1051,3 +1162,5 @@ function isChildComponentType<T extends ComponentType>(
 
   return child.type === component;
 }
+
+const STORAGE_KEY_THEME = 'theme';
