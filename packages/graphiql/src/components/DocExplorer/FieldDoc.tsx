@@ -5,18 +5,21 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
-import { GraphQLArgument, DirectiveNode, isType } from 'graphql';
-import { useExplorerContext } from '@graphiql/react';
-
-import Argument from './Argument';
-import Directive from './Directive';
-import MarkdownContent from './MarkdownContent';
-import TypeLink from './TypeLink';
+import {
+  Argument,
+  Button,
+  Directive,
+  ExplorerFieldDef,
+  ExplorerSection,
+  MarkdownContent,
+  TypeLink,
+  useExplorerContext,
+} from '@graphiql/react';
+import { ConstDirectiveNode, GraphQLArgument, isType, Kind } from 'graphql';
+import React, { useState } from 'react';
 
 export default function FieldDoc() {
   const { explorerNavStack } = useExplorerContext({ nonNull: true });
-  const [showDeprecated, handleShowDeprecated] = React.useState(false);
 
   const navItem = explorerNavStack[explorerNavStack.length - 1];
   const field = navItem.def;
@@ -24,105 +27,95 @@ export default function FieldDoc() {
     return null;
   }
 
-  let argsDef;
-  let deprecatedArgsDef;
-  if (field && 'args' in field && field.args.length > 0) {
-    argsDef = (
-      <div id="doc-args" className="doc-category">
-        <div className="doc-category-title">arguments</div>
-        {field.args
-          .filter(arg => !arg.deprecationReason)
-          .map((arg: GraphQLArgument) => (
-            <div key={arg.name} className="doc-category-item">
-              <div>
-                <Argument arg={arg} />
-              </div>
-              <MarkdownContent
-                className="doc-value-description"
-                markdown={arg.description}
-              />
-              {arg && 'deprecationReason' in arg && (
-                <MarkdownContent
-                  className="doc-deprecation"
-                  markdown={arg?.deprecationReason}
-                />
-              )}
-            </div>
-          ))}
-      </div>
-    );
-    const deprecatedArgs = field.args.filter(arg =>
-      Boolean(arg.deprecationReason),
-    );
-    if (deprecatedArgs.length > 0) {
-      deprecatedArgsDef = (
-        <div id="doc-deprecated-args" className="doc-category">
-          <div className="doc-category-title">deprecated arguments</div>
-          {!showDeprecated ? (
-            <button
-              className="show-btn"
-              onClick={() => handleShowDeprecated(!showDeprecated)}>
-              Show deprecated arguments...
-            </button>
-          ) : (
-            deprecatedArgs.map((arg, i) => (
-              <div key={i}>
-                <div>
-                  <Argument arg={arg} />
-                </div>
-                <MarkdownContent
-                  className="doc-value-description"
-                  markdown={arg.description}
-                />
-                {arg && 'deprecationReason' in arg && (
-                  <MarkdownContent
-                    className="doc-deprecation"
-                    markdown={arg?.deprecationReason}
-                  />
-                )}
-              </div>
-            ))
-          )}
+  return (
+    <>
+      {field.description ? (
+        <MarkdownContent type="description">
+          {field.description}
+        </MarkdownContent>
+      ) : null}
+      {field.deprecationReason ? (
+        <div className="graphiql-doc-explorer-deprecation">
+          <div className="graphiql-doc-explorer-deprecation-label">
+            Deprecated
+          </div>
+          <MarkdownContent type="deprecation">
+            {field.deprecationReason}
+          </MarkdownContent>
         </div>
-      );
+      ) : null}
+      <ExplorerSection title="Type">
+        <TypeLink type={field.type} />
+      </ExplorerSection>
+      <Arguments field={field} />
+      <Directives field={field} />
+    </>
+  );
+}
+
+function Arguments({ field }: { field: ExplorerFieldDef }) {
+  const [showDeprecated, setShowDeprecated] = useState(false);
+
+  if (!('args' in field)) {
+    return null;
+  }
+
+  const args: GraphQLArgument[] = [];
+  const deprecatedArgs: GraphQLArgument[] = [];
+  for (const argument of field.args) {
+    if (argument.deprecationReason) {
+      deprecatedArgs.push(argument);
+    } else {
+      args.push(argument);
     }
   }
 
-  let directivesDef;
-  if (field?.astNode?.directives && field.astNode.directives.length > 0) {
-    directivesDef = (
-      <div id="doc-directives" className="doc-category">
-        <div className="doc-category-title">directives</div>
-        {field.astNode.directives.map((directive: DirectiveNode) => (
-          <div key={directive.name.value} className="doc-category-item">
-            <div>
-              <Directive directive={directive} />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <MarkdownContent
-        className="doc-type-description"
-        markdown={field.description || 'No Description'}
-      />
-      {field && 'deprecationReason' in field && (
-        <MarkdownContent
-          className="doc-deprecation"
-          markdown={field.deprecationReason}
-        />
-      )}
-      <div className="doc-category">
-        <div className="doc-category-title">type</div>
-        <TypeLink type={field.type} />
-      </div>
-      {argsDef}
-      {directivesDef}
-      {deprecatedArgsDef}
-    </div>
+    <>
+      {args.length > 0 ? (
+        <ExplorerSection title="Arguments">
+          {args.map(arg => (
+            <Argument key={arg.name} arg={arg} />
+          ))}
+        </ExplorerSection>
+      ) : null}
+      {deprecatedArgs.length > 0 ? (
+        showDeprecated || args.length === 0 ? (
+          <ExplorerSection title="Deprecated Arguments">
+            {deprecatedArgs.map(arg => (
+              <Argument key={arg.name} arg={arg} />
+            ))}
+          </ExplorerSection>
+        ) : (
+          <Button
+            onClick={() => {
+              setShowDeprecated(true);
+            }}>
+            Show deprecated arguments
+          </Button>
+        )
+      ) : null}
+    </>
+  );
+}
+
+const d: ConstDirectiveNode = {
+  kind: Kind.DIRECTIVE,
+  name: { kind: Kind.NAME, value: 'customStuff' },
+};
+
+function Directives({ field }: { field: ExplorerFieldDef }) {
+  const directives = field.astNode?.directives || [d];
+  if (!directives || directives.length === 0) {
+    return null;
+  }
+  return (
+    <ExplorerSection title="Directives">
+      {directives.map(directive => (
+        <div key={directive.name.value}>
+          <Directive directive={directive} />
+        </div>
+      ))}
+    </ExplorerSection>
   );
 }

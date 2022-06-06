@@ -23,8 +23,14 @@ export {
   useExecutionContext,
 } from './execution';
 export {
+  Argument,
+  DefaultValue,
+  Directive,
   ExplorerContext,
   ExplorerContextProvider,
+  ExplorerSection,
+  FieldLink,
+  TypeLink,
   useExplorerContext,
 } from './explorer';
 export {
@@ -70,4 +76,3 @@ export type { SchemaContextType } from './schema';
 export type { StorageContextType } from './storage';
 
 import './style/root.css';
-import './style/markdown.css';

@@ -142,16 +142,15 @@
   border-left: 1px solid var(--color-neutral-15);
   flex: 1;
   max-width: calc(100% - 2 * var(--px-16));
+  overflow-y: auto;
   padding: var(--px-16);
 }
 
 /* Generic loading spinner */
 .graphiql-container .graphiql-spinner {
   height: 56px;
-  left: 50%;
-  position: relative;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  margin: auto;
+  margin-top: var(--px-16);
   width: 56px;
 }
 .graphiql-container .graphiql-spinner::after {
@@ -199,4 +198,91 @@
   height: var(--px-12);
   padding: var(--px-12);
   width: var(--px-12);
+}
+
+/* Generic error message */
+.graphiql-error {
+  background-color: var(--color-red-background);
+  border: 1px solid var(--color-red);
+  border-radius: var(--border-radius-8);
+  color: var(--color-red);
+  padding: var(--px-8) var(--px-12);
+}
+
+/**/
+/**/
+/**/
+/**/
+/**/
+
+.graphiql-doc-explorer-header {
+  display: flex;
+}
+
+.graphiql-doc-explorer-header-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.graphiql-doc-explorer-back {
+  align-items: center;
+  color: var(--color-neutral-60);
+  display: flex;
+  text-decoration: none;
+}
+.graphiql-doc-explorer-back:hover {
+  text-decoration: underline;
+}
+
+.graphiql-doc-explorer-back > svg {
+  height: var(--px-8);
+  margin-right: var(--px-8);
+  width: var(--px-8);
+}
+
+.graphiql-doc-explorer-title {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-h2);
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graphiql-doc-explorer-title:not(:first-child) {
+  font-size: var(--font-size-h3);
+  margin-top: var(--px-8);
+}
+
+.graphiql-doc-explorer-content > * {
+  color: var(--color-neutral-60);
+  margin-top: var(--px-20);
+}
+
+.graphiql-doc-explorer-root-type {
+  color: var(--color-blue);
+}
+
+.graphiql-doc-explorer-item > :not(:first-child) {
+  margin-top: var(--px-12);
+}
+
+.graphiql-doc-explorer-deprecation {
+  background-color: var(--color-orche-background);
+  border: 1px solid var(--color-orche);
+  border-radius: var(--px-4);
+  color: var(--color-orche);
+  padding: var(--px-8);
+}
+
+.graphiql-doc-explorer-deprecation-label {
+  font-size: var(--font-size-hint);
+  font-weight: var(--font-weight-medium);
+}
+
+.graphiql-doc-explorer-enum-value {
+  color: var(--color-blue);
+}
+
+.graphiql-doc-explorer-argument-multiple {
+  margin-left: var(--px-8);
 }

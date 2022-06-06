@@ -55,7 +55,7 @@ describe('DocExplorer', () => {
         <DocExplorerWithContext />
       </SchemaContext.Provider>,
     );
-    const error = container.querySelectorAll('.error-container');
+    const error = container.querySelectorAll('.graphiql-error');
     expect(error).toHaveLength(1);
     expect(error[0]).toHaveTextContent('No Schema Available');
   });
@@ -65,7 +65,7 @@ describe('DocExplorer', () => {
         <DocExplorerWithContext />,
       </SchemaContext.Provider>,
     );
-    const error = container.querySelectorAll('.error-container');
+    const error = container.querySelectorAll('.graphiql-error');
     expect(error).toHaveLength(0);
     expect(container.querySelector('.doc-type-description')).toHaveTextContent(
       'GraphQL Schema for testing',

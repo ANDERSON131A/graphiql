@@ -5,16 +5,20 @@
  *  LICENSE file in the root directory of this source tree.
  */
 
+import {
+  ExplorerSection,
+  MarkdownContent,
+  TypeLink,
+  useExplorerContext,
+  useSchemaContext,
+} from '@graphiql/react';
 import React from 'react';
-import TypeLink from './TypeLink';
-import MarkdownContent from './MarkdownContent';
-import { useSchemaContext } from '@graphiql/react';
 
 // Render the top level Schema
 export default function SchemaDoc() {
   const { schema } = useSchemaContext({ nonNull: true });
-
-  if (!schema) {
+  const { explorerNavStack } = useExplorerContext({ nonNull: true });
+  if (!schema || explorerNavStack.length > 1) {
     return null;
   }
 
@@ -23,38 +27,33 @@ export default function SchemaDoc() {
   const subscriptionType = schema.getSubscriptionType?.();
 
   return (
-    <div>
-      <MarkdownContent
-        className="doc-type-description"
-        markdown={
-          schema.description ||
-          'A GraphQL schema provides a root type for each kind of operation.'
-        }
-      />
-      <div className="doc-category">
-        <div className="doc-category-title">root types</div>
+    <>
+      <MarkdownContent type="description">
+        {schema.description ||
+          'A GraphQL schema provides a root type for each kind of operation.'}
+      </MarkdownContent>
+      <ExplorerSection title="Root types">
         {queryType ? (
-          <div className="doc-category-item">
-            <span className="keyword">query</span>
-            {': '}
+          <div>
+            <span className="graphiql-doc-explorer-root-type">query: </span>
             <TypeLink type={queryType} />
           </div>
         ) : null}
         {mutationType && (
-          <div className="doc-category-item">
-            <span className="keyword">mutation</span>
-            {': '}
+          <div>
+            <span className="graphiql-doc-explorer-root-type">mutation: </span>
             <TypeLink type={mutationType} />
           </div>
         )}
         {subscriptionType && (
-          <div className="doc-category-item">
-            <span className="keyword">subscription</span>
-            {': '}
+          <div>
+            <span className="graphiql-doc-explorer-root-type">
+              subscription:{' '}
+            </span>
             <TypeLink type={subscriptionType} />
           </div>
         )}
-      </div>
-    </div>
+      </ExplorerSection>
+    </>
   );
 }
