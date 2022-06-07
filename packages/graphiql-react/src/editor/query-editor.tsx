@@ -1,4 +1,5 @@
 import { getSelectedOperationName } from '@graphiql/toolkit';
+import type { EditorChange } from 'codemirror';
 import type { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
 import type {
   DocumentNode,
@@ -16,6 +17,7 @@ import { useSchemaContext } from '../schema';
 import { useStorageContext } from '../storage';
 import debounce from '../utility/debounce';
 import { commonKeys, importCodeMirror } from './common';
+import { onHasCompletion } from './completion';
 import {
   CodeMirrorEditorWithOperationFacts,
   useEditorContext,
@@ -23,7 +25,6 @@ import {
 import {
   CopyQueryCallback,
   EditCallback,
-  useCompletion,
   useCopyQuery,
   useKeyMap,
   useMergeQuery,
@@ -327,7 +328,7 @@ export function useQueryEditor(
     codeMirrorRef,
   );
 
-  useCompletion(queryEditor, useQueryEditor);
+  useTypeLink(queryEditor, onClickReference || null, useQueryEditor);
 
   useKeyMap(queryEditor, ['Cmd-Enter', 'Ctrl-Enter'], executionContext?.run);
   useKeyMap(queryEditor, ['Shift-Ctrl-C'], copy);
@@ -411,6 +412,40 @@ function useSynchronizeExternalFragments(
       codeMirrorRef.current.signal(editor, 'change', editor);
     }
   }, [editor, externalFragments, codeMirrorRef]);
+}
+
+function useTypeLink(
+  editor: CodeMirrorEditor | null,
+  callback: OnClickReference | null,
+  caller: Function,
+) {
+  const { schema } = useSchemaContext({ nonNull: true, caller });
+  const explorer = useExplorerContext();
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const handleCompletion = (
+      instance: CodeMirrorEditor,
+      changeObj?: EditorChange,
+    ) => {
+      onHasCompletion(instance, changeObj, schema, explorer, type => {
+        callback?.({ kind: 'Type', type, schema: schema || undefined });
+      });
+    };
+    editor.on(
+      // @ts-expect-error @TODO additional args for hasCompletion event
+      'hasCompletion',
+      handleCompletion,
+    );
+    return () =>
+      editor.off(
+        // @ts-expect-error @TODO additional args for hasCompletion event
+        'hasCompletion',
+        handleCompletion,
+      );
+  }, [callback, editor, explorer, schema]);
 }
 
 const AUTO_COMPLETE_AFTER_KEY = /^[a-zA-Z0-9_@(]$/;

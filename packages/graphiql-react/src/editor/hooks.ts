@@ -1,14 +1,11 @@
 import { fillLeafs, GetDefaultFieldNamesFn, mergeAst } from '@graphiql/toolkit';
-import { EditorChange } from 'codemirror';
 import copyToClipboard from 'copy-to-clipboard';
 import { parse, print } from 'graphql';
 import { useCallback, useEffect } from 'react';
 
-import { useExplorerContext } from '../explorer';
 import { useSchemaContext } from '../schema';
 import { useStorageContext } from '../storage';
 import debounce from '../utility/debounce';
-import { onHasCompletion } from './completion';
 import { useEditorContext } from './context';
 import { CodeMirrorEditor } from './types';
 
@@ -67,37 +64,6 @@ export function useChangeHandler(
     tabProperty,
     updateActiveTabValues,
   ]);
-}
-
-export function useCompletion(
-  editor: CodeMirrorEditor | null,
-  caller: Function,
-) {
-  const { schema } = useSchemaContext({ nonNull: true, caller });
-  const explorer = useExplorerContext();
-  useEffect(() => {
-    if (!editor) {
-      return;
-    }
-
-    const handleCompletion = (
-      instance: CodeMirrorEditor,
-      changeObj?: EditorChange,
-    ) => {
-      onHasCompletion(instance, changeObj, schema, explorer);
-    };
-    editor.on(
-      // @ts-expect-error @TODO additional args for hasCompletion event
-      'hasCompletion',
-      handleCompletion,
-    );
-    return () =>
-      editor.off(
-        // @ts-expect-error @TODO additional args for hasCompletion event
-        'hasCompletion',
-        handleCompletion,
-      );
-  }, [editor, explorer, schema]);
 }
 
 type EmptyCallback = () => void;
