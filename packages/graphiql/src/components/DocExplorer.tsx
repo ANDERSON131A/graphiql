@@ -7,6 +7,7 @@
 
 import {
   ChevronLeftIcon,
+  Spinner,
   useExplorerContext,
   useSchemaContext,
 } from '@graphiql/react';
@@ -63,7 +64,7 @@ export function DocExplorer(props: DocExplorerProps) {
     );
   } else if (isFetching) {
     // Schema is undefined when it is being loaded via introspection.
-    content = <div className="graphiql-spinner" />;
+    content = <Spinner />;
   } else if (!schema) {
     // Schema is null when it explicitly does not exist, typically due to
     // an error during introspection.
